@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\DocPage;
 use App\Models\DocSection;
 use Illuminate\Http\JsonResponse;

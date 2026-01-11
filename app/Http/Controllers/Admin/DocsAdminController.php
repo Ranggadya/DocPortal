@@ -18,9 +18,6 @@ class DocsAdminController extends Controller
       * - Membuat page baru di sebuah section
       * - Konten disimpan sebagai markdown/html (default markdown)
       * - Status bisa draft/published/archived
-      *
-      * Catatan:
-      * - Bila status published, set published_at otomatis.
       */
 
      public function createPage(Request $request): JsonResponse

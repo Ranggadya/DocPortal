@@ -7,58 +7,48 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    /**
-     * POST /api/login
-     * 
-     * Login user dan return Sanctum token
-     */
+ 
     public function login(Request $request): JsonResponse
     {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
+        $credentials = $request->validate([
+            'email' => ['required|email'],
+            'password' => ['required']
         ]);
 
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!Auth::attempt($credentials) ) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
 
-        $token = $user->createToken('api-token')->plainTextToken;
+        $request->session()->regenerate();
 
         return response()->json([
-            'user' => $user,
-            'token' => $token,
+            'user' => Auth::user(),
+            'message' => 'Login Successful',
         ], 200);
     }
 
-    /**
-     * POST /api/logout
-     * 
-     * Logout user (delete current token)
-     */
-    public function logout(Request $request): JsonResponse
-    {
-        $request->user()->currentAccessToken()->delete();
+   public function logout(Request $request): JsonResponse
+   {
+    Auth::logout();
 
-        return response()->json([
-            'message' => 'Logged out successfully.',
-        ], 200);
-    }
+    $request->session()->invalidate();
 
-    /**
-     * GET /api/user
-     * 
-     * Get current authenticated user
-     */
+    $request->session()->regenerateToken();
+
+    return response()->json([
+        'message'=> 'Logout Successful',
+    ], 200);
+   }
+
     public function user(Request $request): JsonResponse
     {
-        return response()->json($request->user(), 200);
+        return response()->json([
+            'user' => $request->user()], 200);
     }
 }
