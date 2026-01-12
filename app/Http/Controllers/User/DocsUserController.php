@@ -22,6 +22,8 @@ class DocsUserController extends Controller
             'description' => ['nullable', 'string'],
         ]);
 
+        $maxPos = DB::table('docs_sections')->max('position') ?? 0;
+        $data['position'] = $maxPos + 1;
         $section = DocSection::create($data);
 
         return response()->json($section, 201);
@@ -30,6 +32,7 @@ class DocsUserController extends Controller
     public function getListSections(): JsonResponse
     {
         $section = DocSection::query()
+            ->orderBy('position')
             ->orderBy('id')
             ->get();
         return response()->json($section, 200);
@@ -106,6 +109,12 @@ class DocsUserController extends Controller
         $data['content_type'] = $data['content_type'] ?? 'markdown';
         $data['status'] = $data['status'] ?? 'draft';
 
+        $maxPos = DB::table('doc_pages')
+            ->where('section_id', $data['section_id'])
+            ->max('position') ?? 0;
+
+        $data['position'] = $maxPos + 1;
+
         $page = DocPage::create($data);
         return response()->json($page, 201);
     }
@@ -122,6 +131,7 @@ class DocsUserController extends Controller
 
         $pages = DocPage::query()
             ->where('section_id', $sectionId)
+            ->orderBy('position')
             ->orderBy('id')
             ->get();
         return response()->json($pages, 200);
@@ -157,5 +167,57 @@ class DocsUserController extends Controller
         ]);
 
         return response()->json($page, 200);
+    }
+
+    public function reorderSections(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'ordered_ids' => ['required', 'array', 'min:1'],
+            'ordered_ids.*' => ['integer'],
+        ]);
+
+        DB::transaction(function () use ($data) {
+            foreach ($data['ordered_ids'] as $index => $id) {
+                DB::table('docs_sections')
+                    ->where('id', $id)
+                    ->update(['position' => $index + 1]);
+            }
+        });
+
+        return response()->json(['message' => 'Section order updated.'], 200);
+    }
+
+
+    public function reorderPages(Request $request, int $sectionId): JsonResponse
+    {
+        $data = $request->validate([
+            'ordered_ids' => ['required', 'array', 'min:1'],
+            'ordered_ids.*' => ['integer'],
+        ]);
+
+        $sectionExists = DB::table('docs_sections')->where('id', $sectionId)->exists();
+        if (! $sectionExists) {
+            return response()->json(['message' => 'Section tidak ditemukan.'], 404);
+        }
+
+        DB::transaction(function () use ($data, $sectionId) {
+            $count = DB::table('doc_pages')
+                ->where('section_id', $sectionId)
+                ->whereIn('id', $data['ordered_ids'])
+                ->count();
+
+            if ($count !== count($data['ordered_ids'])) {
+                abort(422, 'Ada page yang tidak termasuk section ini.');
+            }
+
+            foreach ($data['ordered_ids'] as $index => $id) {
+                DB::table('doc_pages')
+                    ->where('id', $id)
+                    ->where('section_id', $sectionId)
+                    ->update(['position' => $index + 1]);
+            }
+        });
+
+        return response()->json(['message' => 'Page order updated.'], 200);
     }
 }

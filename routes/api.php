@@ -25,6 +25,8 @@ Route::middleware('auth:sanctum')->prefix('user/docs')->group(function () {
     Route::post('/pages/{id}/publish', [DocsUserController::class, 'publishPage']);
     Route::post('/pages/{id}/unpublish', [DocsUserController::class, 'unpublishPage']);
     Route::post('/sections/{id}/archive', [DocsUserController::class, 'archiveSection']);
+    Route::patch('/sections/reorder', [DocsUserController::class, 'reorderSections']);
+    Route::patch('/sections/{sectionId}/pages/reorder', [DocsUserController::class, 'reorderPages']);
 });
 Route::middleware('auth:sanctum')->prefix('admin/docs')->group(function () {
     Route::post('/pages', [DocsAdminController::class, 'createPage']);
