@@ -24,6 +24,7 @@ Route::middleware('auth:sanctum')->prefix('user/docs')->group(function () {
     Route::delete('/pages/{id}', [DocsUserController::class, 'deletePage']);
     Route::post('/pages/{id}/publish', [DocsUserController::class, 'publishPage']);
     Route::post('/pages/{id}/unpublish', [DocsUserController::class, 'unpublishPage']);
+    Route::post('/sections/{id}/archive', [DocsUserController::class, 'archiveSection']);
 });
 Route::middleware('auth:sanctum')->prefix('admin/docs')->group(function () {
     Route::post('/pages', [DocsAdminController::class, 'createPage']);

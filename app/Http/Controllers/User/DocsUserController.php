@@ -54,6 +54,44 @@ class DocsUserController extends Controller
         return response()->json($section, 200);
     }
 
+    public function deleteSection(int $id): JsonResponse
+    {
+        $section = DocSection::findOrFail($id);
+
+        $activePagesCount = $section->pages()->count();
+
+        if (!$activePagesCount > 0) {
+            return response()->json([
+                'message' => 'Section masih memiliki page. Hapus/arsipkan page terlebih dahulu, atau gunakan endpoint archive section (cascade).',
+                'active_pages' => $activePagesCount,
+            ], 422);
+        }
+
+        $section->delete();
+
+        return response()->json([
+            'message' => 'Section Berhasil di hapus'
+        ], 200);
+    }
+
+    public function archiveSection(int $id): JsonResponse
+    {
+        $section = DocSection::findOrFail($id);
+
+        DB::transaction(function () use ($section) {
+            // soft delete semua pages aktif dalam section
+            $section->pages()->delete();
+
+            // soft delete section
+            $section->delete();
+        });
+
+        return response()->json([
+            'message' => 'Section dan seluruh page di dalamnya berhasil diarsipkan.',
+        ], 200);
+    }
+
+
     public function createPage(Request $request): JsonResponse
     {
         $data = $request->validate([
