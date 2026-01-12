@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+
+
 class DocPage extends Model
 {
     use SoftDeletes;
@@ -36,5 +38,12 @@ class DocPage extends Model
     {
         return $this->hasMany(DocCodeSnippet::class, 'page_id')
             ->orderBy('position');
+    }
+
+    public function rows(): HasMany
+    {
+        return $this->hasMany(DocRow::class, 'page_id')
+            ->orderBy('position')
+            ->orderBy('id');
     }
 }

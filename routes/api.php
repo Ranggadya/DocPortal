@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DocsController;
-use App\Http\Controllers\Admin\DocsAdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\User\DocsUserController;
 
@@ -12,6 +11,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('auth/logout', [AuthController::class, 'logout']);
     Route::get('/docs/sections', [DocsController::class, 'getSections']);
     Route::get('/docs/pages/{slug}', [DocsController::class, 'getPageBySlug']);
+    Route::get('/docs/sidebar', [DocsController::class, 'getSidebar']);
+
 });
 Route::middleware('auth:sanctum')->prefix('user/docs')->group(function () {
     Route::get('/sections', [DocsUserController::class, 'getListSections']);
@@ -27,9 +28,20 @@ Route::middleware('auth:sanctum')->prefix('user/docs')->group(function () {
     Route::post('/sections/{id}/archive', [DocsUserController::class, 'archiveSection']);
     Route::patch('/sections/reorder', [DocsUserController::class, 'reorderSections']);
     Route::patch('/sections/{sectionId}/pages/reorder', [DocsUserController::class, 'reorderPages']);
-});
-Route::middleware('auth:sanctum')->prefix('admin/docs')->group(function () {
-    Route::post('/pages', [DocsAdminController::class, 'createPage']);
-    Route::put('/pages/{id}', [DocsAdminController::class, 'updatePage']);
-    Route::post('/pages/{pageId}/snippets', [DocsAdminController::class, 'addSnippet']);
+
+    Route::get('/pages/{pageId}/rows', [DocsUserController::class, 'listRowsByPage']);
+    Route::post('/pages/{pageId}/rows', [DocsUserController::class, 'createRow']);
+    Route::put('/rows/{rowId}', [DocsUserController::class, 'updateRow']);
+    Route::delete('/rows/{rowId}', [DocsUserController::class, 'deleteRow']);
+
+    // SNIPPETS (code tabs per row)
+    Route::get('/rows/{rowId}/snippets', [DocsUserController::class, 'listSnippetsByRow']);
+    Route::post('/rows/{rowId}/snippets', [DocsUserController::class, 'createSnippet']);
+    Route::put('/snippets/{snippetId}', [DocsUserController::class, 'updateSnippet']);
+    Route::delete('/snippets/{snippetId}', [DocsUserController::class, 'deleteSnippet']);
+
+    Route::patch('/pages/{pageId}/rows/reorder', [DocsUserController::class, 'reorderRows']);
+    Route::patch('/rows/{rowId}/snippets/reorder', [DocsUserController::class, 'reorderSnippets']);
+
+
 });
